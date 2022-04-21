@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.linalg import expm, norm
 from scipy.integrate import cumtrapz
 import matplotlib.animation as ani
-from utils import preprocessing
+from utils import preprocessing, CS_interpolation
 
 
 def rotate(vec, angle):
@@ -103,4 +103,9 @@ angles = df[[
 angles -= angles[0].reshape((1, 3))
 accelerations = np.linalg.norm(accelerations, axis=1)
 angles_accelerations = np.linalg.norm(angles_accelerations, axis=1)
-preprocessing(accelerations)
+cycles = preprocessing(accelerations)
+accelerations = CS_interpolation(accelerations)
+plt.plot(np.arange(len(accelerations))/200, accelerations)
+for x in cycles:
+    plt.axvline(x/200, c = "orange")
+plt.show()

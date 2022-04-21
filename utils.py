@@ -48,32 +48,56 @@ def preprocessing(signals):
     plt.show()
 
     #getting correlation
-    corrs = []
-    for i in range(100, len(processed_s) - 100):
-        sample = processed_s[i-100:i+100]
-        corr = corr_distance(template, sample)
-        corrs.append(corr)
-    corrs = np.array(corrs)
-
-    plt.plot(corrs)
-    plt.plot(np.where(corrs < 0.5)[0], corrs[np.where(corrs < 0.5)])
-
-    search_indexes = np.where(corrs < 0.5)
-    searched_values = corrs[search_indexes]
-    search_indexes = search_indexes[0]
-
-    minima = argrelmin(searched_values)[0]
-    min_indexes = search_indexes[minima]
-    plt.scatter(min_indexes, corrs[min_indexes])
-    plt.show()
-    
     steps = [] 
-    for i in range(0, len(min_indexes)-2, 2):
-        steps.append(processed_s[min_indexes[i]:min_indexes[i+2]])
-    for i in range(len(steps)):
-        plt.plot(steps[i])
-    plt.legend()
+    i = 100
+    fig, axs = plt.subplots(1, 2)
+    colors = plt.cm.get_cmap("Blues")(np.linspace(0, 1, 70))
+    c_ind = 0
+    cycles = []
+    while i < len(processed_s) - 700:
+        corrs = []
+        for j in range(i, i+600):
+            sample = processed_s[j-100:j+100]
+            corr = corr_distance(template, sample)
+            corrs.append(corr)
+        corrs = np.array(corrs)
+        # plt.plot(corrs)
+
+        search_indexes = np.where(corrs < 0.5)
+        searched_values = corrs[search_indexes]
+        search_indexes = search_indexes[0]
+        # plt.plot(search_indexes, searched_values)
+        minima = argrelmin(searched_values)[0]
+        min_indexes = search_indexes[minima] 
+        min_indexes = parse_indexes(min_indexes, corrs)
+        # plt.scatter(min_indexes, corrs[min_indexes])
+        # plt.show()
+        if i == 100:
+            i = i + min_indexes[0]
+            cycles.append(i + 400)
+            min_indexes = min_indexes[1:] - min_indexes[0]
+        steps.append(processed_s[i:i+min_indexes[1]])
+        i += min_indexes[1]
+        cycles.append(i +  400)
+        template = 0.9 * template + 0.1 * processed_s[i-100:i+100]
+        
+        # plt.plot(steps[-1])
+        # plt.show()
+        axs[0].plot(steps[-1])
+        axs[1].plot(template, c=colors[c_ind])
+        c_ind +=1
+    axs[1].plot(template, color="red")
     plt.show()
+    return cycles
+
+def parse_indexes(min_indexes, corrs):
+    parsed_indexes = []
+    for index in min_indexes:
+        if min(20, index) == np.argmin(
+            corrs[max(index-20, 0):min(index+20, len(corrs))]
+        ):
+            parsed_indexes.append(index)
+    return np.array(parsed_indexes)
 
 def corr_distance(u, v):
     u -= np.mean(u)
