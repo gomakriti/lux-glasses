@@ -2,6 +2,7 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy.signal import firwin, kaiserord, lfilter, argrelmin
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 def CS_interpolation(signals):
     x = np.linspace(0, (len(signals) - 1)/ 50, len(signals))
@@ -19,19 +20,22 @@ def Fir_filtering(signals, nyq_rate, ripple_db, cutoff_hz):
     return filtered_x, pad
 
 
-def preprocessing(signals):
-    processed_s = CS_interpolation(signals)
+def preprocessing(signal):
+    processed_s = CS_interpolation(signal)
 
     x = np.fft.fftfreq(len(processed_s), 1/200)
     plt.plot(x[:len(x)//2], np.abs(np.fft.fft(processed_s))[:len(x)//2])
-    processed_s -= processed_s.mean()
     processed_s, pad = Fir_filtering(processed_s, 100, 60, 40)
     processed_s = processed_s[pad:-pad]
-    processed_s = processed_s[400:]
     x = np.fft.fftfreq(len(processed_s), 1/200)
     plt.plot(x[:len(x)//2], np.abs(np.fft.fft(processed_s))[:len(x)//2])
     plt.yscale("log")
     plt.show()
+    return processed_s
+
+def compute_cycles(signal):
+    processed_s = signal[400:].copy()
+    processed_s -= processed_s.mean()
 
     util_signal, pad = Fir_filtering(processed_s, 100, 60, 3)
     util_signal = util_signal[pad:-pad]
@@ -44,8 +48,6 @@ def preprocessing(signals):
     
     print(f"Found actual minima at index {actual_minima}")
     template = processed_s[actual_minima-100:actual_minima+100]
-    plt.plot(template)
-    plt.show()
 
     #getting correlation
     steps = [] 
@@ -103,3 +105,62 @@ def corr_distance(u, v):
     u -= np.mean(u)
     v -= np.mean(v)
     return 1 - np.dot(u, v) / np.linalg.norm(u) / np.linalg.norm(v)
+
+def get_cycles(cycles, signal):
+    pieces = []
+    for i in range(len(cycles) - 1):
+        pieces.append(signal[cycles[i]:cycles[i+1]])
+    return pieces
+
+def get_accelerations_directions(acceleration_cycles, gyro_cycles):
+    new_accelerations = []
+    new_gyroscopes = []
+    for i, (cycle, gyro_cycle) in enumerate(zip(acceleration_cycles, gyro_cycles)):
+        first_axis = cycle.mean(axis=0)
+        gravity = first_axis.reshape(1, 3) / np.linalg.norm(first_axis)
+        normalized_acc = []
+        normalized_gyr = []
+        normalized_acc.append(cycle@gravity.T)
+        normalized_gyr.append(gyro_cycle@gravity.T)
+        main_direction_acc = normalized_acc[0] * gravity
+        main_direction_gyr = normalized_gyr[0] * gravity
+        planar_direction_acc = cycle - main_direction_acc
+        planar_direction_gyr = gyro_cycle - main_direction_gyr
+        pca_acc = PCA(2).fit(planar_direction_acc)
+        pca_gyr = PCA(2).fit(planar_direction_gyr)
+        acc_y, acc_z = pca_acc.components_
+        gyr_y, gyr_z = pca_gyr.components_
+        if i == 0:
+            acc_y0, acc_z0 = acc_y, acc_z
+            gyr_y0, gyr_z0 = gyr_y, gyr_z
+        acc_y = normalize_principal_vector(acc_y, acc_y0)
+        acc_z = normalize_principal_vector(acc_z, acc_z0)
+        gyr_y = normalize_principal_vector(gyr_y, gyr_y0)
+        gyr_z = normalize_principal_vector(gyr_z, gyr_z0)
+        normalized_acc.append(cycle@acc_y.reshape(3, 1))
+        normalized_acc.append(cycle@acc_z.reshape(3, 1))
+        normalized_gyr.append(gyro_cycle@gyr_y.reshape(3, 1))
+        normalized_gyr.append(gyro_cycle@gyr_z.reshape(3, 1))
+        new_accelerations.append(np.concatenate(normalized_acc, axis=1))
+        new_gyroscopes.append(np.concatenate(normalized_gyr, axis=1))
+    return new_accelerations, new_gyroscopes
+
+def normalize_principal_vector(v, v0):
+    if v.reshape(1, 3)@v0.reshape((3, 1)) < 0:
+        return -v
+    else:
+        return v
+
+def normalize_length(cycles):
+    normalized_cycles = []
+    for cycle in cycles:
+        cycle_vect = []
+        for vec in cycle.T:
+            x = np.arange(len(vec))
+            cs = CubicSpline(x, vec)
+            new_x = np.linspace(0, len(vec), 200)
+            new_interp = cs(new_x)
+            cycle_vect.append(new_interp)
+        normalized_cycles.append(np.vstack(cycle_vect).T)
+    return normalized_cycles
+
