@@ -24,13 +24,13 @@ def preprocessing(signal):
     processed_s = CS_interpolation(signal)
 
     x = np.fft.fftfreq(len(processed_s), 1/200)
-    plt.plot(x[:len(x)//2], np.abs(np.fft.fft(processed_s))[:len(x)//2])
+    # plt.plot(x[:len(x)//2], np.abs(np.fft.fft(processed_s))[:len(x)//2])
     processed_s, pad = Fir_filtering(processed_s, 100, 60, 40)
     processed_s = processed_s[pad:-pad]
     x = np.fft.fftfreq(len(processed_s), 1/200)
-    plt.plot(x[:len(x)//2], np.abs(np.fft.fft(processed_s))[:len(x)//2])
-    plt.yscale("log")
-    plt.show()
+    # plt.plot(x[:len(x)//2], np.abs(np.fft.fft(processed_s))[:len(x)//2])
+    # plt.yscale("log")
+    # plt.show()
     return processed_s
 
 def compute_cycles(signal):
@@ -41,34 +41,34 @@ def compute_cycles(signal):
     util_signal = util_signal[pad:-pad]
     minima_ind = argrelmin(util_signal)[0][1]
     
-    print(f"Found minima at index {minima_ind}")
     actual_minima = np.argmin(
-        processed_s[minima_ind-100:minima_ind+100]
+        processed_s[minima_ind:minima_ind+200]
     ) + minima_ind
     
-    print(f"Found actual minima at index {actual_minima}")
     template = processed_s[actual_minima-100:actual_minima+100]
 
     #getting correlation
     steps = [] 
     i = 100
-    fig, axs = plt.subplots(1, 2)
-    colors = plt.cm.get_cmap("Blues")(np.linspace(0, 1, 70))
+    # fig, axs = plt.subplots(1, 2)
+    # colors = plt.cm.get_cmap("Blues")(np.linspace(0, 1, 70))
     c_ind = 0
     cycles = []
     while i < len(processed_s) - 700:
         corrs = []
         for j in range(i, i+600):
             sample = processed_s[j-100:j+100]
-            corr = corr_distance(template, sample)
+            delta = lambda x: np.max(x) - np.min(x)
+            if delta(sample) < delta(template) / 10:
+                corr = 1
+            else:
+                corr = corr_distance(template, sample)
             corrs.append(corr)
         corrs = np.array(corrs)
-        # plt.plot(corrs)
 
         search_indexes = np.where(corrs < 0.5)
         searched_values = corrs[search_indexes]
         search_indexes = search_indexes[0]
-        # plt.plot(search_indexes, searched_values)
         minima = argrelmin(searched_values)[0]
         min_indexes = search_indexes[minima] 
         min_indexes = parse_indexes(min_indexes, corrs)
@@ -78,19 +78,49 @@ def compute_cycles(signal):
             i = i + min_indexes[0]
             cycles.append(i + 400)
             min_indexes = min_indexes[1:] - min_indexes[0]
+        if len(min_indexes) < 2:
+            break
         steps.append(processed_s[i:i+min_indexes[1]])
         i += min_indexes[1]
         cycles.append(i +  400)
         template = 0.9 * template + 0.1 * processed_s[i-100:i+100]
         
-        # plt.plot(steps[-1])
-        # plt.show()
-        axs[0].plot(steps[-1])
-        axs[1].plot(template, c=colors[c_ind])
+        # axs[0].plot(steps[-1])
+        # axs[1].plot(template, c=colors[c_ind])
         c_ind +=1
-    axs[1].plot(template, color="red")
-    plt.show()
-    return cycles
+    # axs[1].plot(template, color="red")
+    # plt.show()
+    return template
+
+def count_steps(signal, template):
+    signal -= signal.mean()
+    corrs = []
+    for i in range(len(signal) - len(template)):
+        sample = signal[i:i+200]
+        delta = lambda x: np.max(x) - np.min(x)
+        if delta(sample) < delta(template) / 10:
+            corr = 1
+        else:
+            corr = corr_distance(template, sample)
+        corrs.append(corr)
+    thr = 0.4
+    corrs = np.array(corrs)
+    search_indexes = np.where(corrs < thr)
+    searched_values = corrs[search_indexes]
+    minima = argrelmin(searched_values)[0]
+    search_indexes = search_indexes[0]
+    min_indexes = search_indexes[minima] 
+    min_indexes = parse_indexes(min_indexes, corrs)
+    # plt.vlines(min_indexes + 100, -1000, 1000, color="orange")
+    # plt.ylim([-300, 800])
+    print("Number of steps:",len(min_indexes))
+    # plt.figure()
+    # plt.hlines(thr, 0, len(signal))
+    # plt.plot(corrs)
+    # plt.xlim([-100, 4000])
+    # plt.show()
+    return min_indexes
+
 
 def parse_indexes(min_indexes, corrs):
     parsed_indexes = []

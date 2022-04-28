@@ -22,6 +22,7 @@ CHARACTERISTIC_UUID_BATTERY_SERVICE = "00002a19-0000-1000-8000-00805f9b34fb"
 DATA_INIT0 = b"\x00\xC8\x01\x03"
 DATA_INIT1 = b"\x02\xC8\x01\x03"
 DATA_ACK = b"\x03\x96"
+now = 0
 
 raw_data = ""
 
@@ -90,13 +91,11 @@ async def main(mac_addr: str):
         time_interval = time.time() - first_timestamp
 
         # Wait while data flows
-        await asyncio.sleep(60) # - second_timestamp + first_timestamp)
+        await asyncio.sleep(20) # - second_timestamp + first_timestamp)
         
         # End
         await client.stop_notify(CHARACTERISTIC_UUID_CTRL)
         await client.stop_notify(CHARACTERISTIC_UUID_DATA)
-
- 
 
 if __name__ == "__main__":
     global first_timestamp
@@ -106,4 +105,5 @@ if __name__ == "__main__":
         ADDRESS = sys.argv[1]
     else:
         ADDRESS = "D2:60:7D:C0:B9:95" 
+    now = time.time()
     asyncio.run(main(ADDRESS))
