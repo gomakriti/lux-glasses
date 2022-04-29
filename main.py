@@ -8,51 +8,6 @@ from utils import preprocessing, CS_interpolation, compute_cycles, get_cycles
 from utils import get_accelerations_directions, normalize_length
 from utils import count_steps
 
-
-def rotate(vec, angle):
-    phi, theta, psi = angle
-    Rz = np.array([
-        [np.cos(psi), -np.sin(psi), 0],
-        [np.sin(psi), np.cos(psi), 0],
-        [0, 0, 1]
-    ])
-
-    Ry = np.array([
-        [np.cos(theta), 0, np.sin(theta)],
-        [0, 1, 0],
-        [-np.sin(theta), 0, np.cos(theta)]
-    ])
-
-    Rx = np.array([
-        [1, 0, 0],
-        [0, np.cos(phi), -np.sin(phi)],
-        [0, np.sin(phi), np.cos(phi)]
-    ])
-    rvec = Rz @ Ry @ Rx @ vec
-    return rvec.T
-
-def get_anim_func_angles(positions, velocity):
-
-    min_val = np.min(positions)
-    max_val = np.max(positions)
-    delta = (max_val - min_val)/10
-    x = 0
-    y = 2
-
-    def get_angles(i):
-        colors = ["red", "blue", "green"]
-        if i*5 > len(positions):
-            quit()
-        # plt.clf()
-        # plt.xlim([min_val - delta, max_val + delta])
-        # plt.ylim([min_val - delta, max_val + delta])
-        # plt.xlabel("x")
-        # plt.ylabel("z")
-        # plt.scatter([positions[:5*i, x]], [positions[:5*i, y]], cmap="viridis", c=np.arange(5*i))
-        # plt.plot([positions[5*i, x], positions[5*i, x] + velocity[5*i, x] * 20], [positions[5*i, y], positions[5*i, y] + velocity[5*i, y] * 20], c="blue")
-        # plt.title(f"{i}")
-    return get_angles
-
 labels = (18, 22, 14, 26, 9, 9, 28)
 for i in range(7, 8):
     print(f"Actual number of steps: {labels[i - 1]}")
@@ -64,25 +19,9 @@ for i in range(7, 8):
         "gyrx",
         "gyry",
         "gyrz",
-        "magx",
-        "magy",
-        "magz",
-        "roll",
-        "pitch",
-        "yaw",
         "timestamps"
         ]]
     df["timestamps"] -= np.min(df["timestamps"].min())
-    aps = 15
-    time_interval = 0.3 / 15
-    angle = np.zeros((1, 3))
-    position = np.zeros((1, 3))
-    velocity = np.zeros((1, 3))
-    angle_velocity = np.zeros((1, 3))
-
-    positions = []
-    velocities = []
-    magnetics = []
 
     accelerations = df[[ 
         "accx",
@@ -94,30 +33,22 @@ for i in range(7, 8):
         "gyry",
         "gyrz",
     ]].to_numpy()
-    magnetic_fields = df[[ 
-        "magx",
-        "magy",
-        "magz",
-    ]].to_numpy()
-    angles = df[[
-        "pitch" ,
-        "roll" ,
-        "yaw",
-    ]].to_numpy()
 
-    angles -= angles[0].reshape((1, 3))
     accelerations = np.vstack([
         preprocessing(accelerations[:, 0]),
         preprocessing(accelerations[:, 1]),
         preprocessing(accelerations[:, 2])
     ]).T
+
     angles_accelerations = np.vstack([
         preprocessing(angles_accelerations[:, 0]),
         preprocessing(angles_accelerations[:, 1]),
         preprocessing(angles_accelerations[:, 2])
     ]).T
+    
     accelerations_norm = np.linalg.norm(accelerations, axis=1)
     angles_accelerations_norm = np.linalg.norm(angles_accelerations, axis=1)
+
     template = compute_cycles(accelerations_norm)
     cycles = count_steps(accelerations_norm, template)
 
@@ -128,10 +59,12 @@ for i in range(7, 8):
 
     acceleration_cycles = get_cycles(cycles, accelerations)
     angles_acceleration_cycles = get_cycles(cycles, angles_accelerations)
+
     acc, gyr = get_accelerations_directions(
         acceleration_cycles,
         angles_acceleration_cycles
     )
+
     n_cycles = 10
     for j in range(0, n_cycles, n_cycles):
         fig, axs = plt.subplots(2, 3)
