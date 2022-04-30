@@ -84,6 +84,10 @@ async def main(mac_addr: str):
         await client.start_notify(CHARACTERISTIC_UUID_CTRL, notification_handler_control)
         await client.start_notify(CHARACTERISTIC_UUID_DATA, notification_handler_data)
   
+        import os
+        duration = 2
+        freq = 440
+        os.system(f"play -nq -t alsa synth {duration} sine {freq}")
         # Init data trans
         await client.write_gatt_char(CHARACTERISTIC_UUID_CTRL, DATA_INIT0)
         await client.write_gatt_char(CHARACTERISTIC_UUID_CTRL, DATA_INIT1)
@@ -91,7 +95,7 @@ async def main(mac_addr: str):
         time_interval = time.time() - first_timestamp
 
         # Wait while data flows
-        await asyncio.sleep(20) # - second_timestamp + first_timestamp)
+        await asyncio.sleep(600) # - second_timestamp + first_timestamp)
         
         # End
         await client.stop_notify(CHARACTERISTIC_UUID_CTRL)
@@ -107,3 +111,7 @@ if __name__ == "__main__":
         ADDRESS = "D2:60:7D:C0:B9:95" 
     now = time.time()
     asyncio.run(main(ADDRESS))
+    import os
+    duration = 2
+    freq = 440
+    os.system(f"play -nq -t alsa synth {duration} sine {freq}")

@@ -33,19 +33,24 @@ def preprocessing(signal):
     # plt.show()
     return processed_s
 
-def compute_cycles(signal):
-    processed_s = signal[400:].copy()
+def compute_cycles(signal, template_initialization = None):
+    processed_s = signal[np.where(signal > 1200)[0][0]:].copy()
     processed_s -= processed_s.mean()
+    # plt.plot(processed_s)
+    # plt.show()
 
     util_signal, pad = Fir_filtering(processed_s, 100, 60, 3)
     util_signal = util_signal[pad:-pad]
-    minima_ind = argrelmin(util_signal)[0][1]
+    minima_ind = argrelmin(util_signal)[0][2]
     
     actual_minima = np.argmin(
         processed_s[minima_ind:minima_ind+200]
     ) + minima_ind
     
-    template = processed_s[actual_minima-100:actual_minima+100]
+    if template_initialization is None:
+        template = processed_s[actual_minima-100:actual_minima+100]
+    else:
+        template = template_initialization.copy()
 
     #getting correlation
     steps = [] 
@@ -54,9 +59,9 @@ def compute_cycles(signal):
     # colors = plt.cm.get_cmap("Blues")(np.linspace(0, 1, 70))
     c_ind = 0
     cycles = []
-    while i < len(processed_s) - 700:
+    while i < len(processed_s) - 500:
         corrs = []
-        for j in range(i, i+600):
+        for j in range(i, i+400):
             sample = processed_s[j-100:j+100]
             delta = lambda x: np.max(x) - np.min(x)
             if delta(sample) < delta(template) / 10:
@@ -92,18 +97,17 @@ def compute_cycles(signal):
     # plt.show()
     return template
 
-def count_steps(signal, template):
+def count_steps(signal, template, thr = 0.45):
     signal -= signal.mean()
     corrs = []
     for i in range(len(signal) - len(template)):
         sample = signal[i:i+200]
         delta = lambda x: np.max(x) - np.min(x)
-        if delta(sample) < delta(template) / 10:
+        if delta(sample) < delta(template) / 2:
             corr = 1
         else:
             corr = corr_distance(template, sample)
         corrs.append(corr)
-    thr = 0.4
     corrs = np.array(corrs)
     search_indexes = np.where(corrs < thr)
     searched_values = corrs[search_indexes]
@@ -111,16 +115,35 @@ def count_steps(signal, template):
     search_indexes = search_indexes[0]
     min_indexes = search_indexes[minima] 
     min_indexes = parse_indexes(min_indexes, corrs)
+    # plt.plot(signal)
+    new_indexes = correct_missing_indexes(min_indexes)
+    # plt.vlines(new_indexes + 100, -1000, 1000, color="green")
     # plt.vlines(min_indexes + 100, -1000, 1000, color="orange")
     # plt.ylim([-300, 800])
-    print("Number of steps:",len(min_indexes))
+    print("Number of steps:",len(new_indexes))
     # plt.figure()
     # plt.hlines(thr, 0, len(signal))
     # plt.plot(corrs)
-    # plt.xlim([-100, 4000])
-    # plt.show()
-    return min_indexes
+    # plt.xlim([-100, len(signal) + 100])
 
+    # plt.show()
+    return new_indexes
+
+def correct_missing_indexes(min_indexes):
+    median = np.median(np.diff(min_indexes))
+    start_index = min_indexes[0]
+    indexes = [start_index]
+    for min_index in min_indexes[1:]:
+        if  (min_index - start_index) > 1.5 * median:
+            n_missed = int(np.round((min_index - start_index) / median))
+            for j in range(1, n_missed):
+                indexes.append(
+                    int(start_index + j * np.round((min_index - start_index) / n_missed))
+                )
+        indexes.append(min_index)
+        start_index = min_index
+    # indexes.append(int(start_index + median))
+    return np.array(indexes)
 
 def parse_indexes(min_indexes, corrs):
     parsed_indexes = []

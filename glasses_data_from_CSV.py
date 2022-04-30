@@ -9,7 +9,13 @@ directory = 'df_dataset'
 
 for filename in os.listdir(directory):
     filepath = os.path.join(directory, filename)
-    if os.path.isfile(filepath):
+    if os.path.isfile(filepath) and not os.path.isfile(
+        os.path.join(
+            directory,
+            "fast",
+            os.path.basename(filepath)[:-4] + "_fast.csv"
+        )
+    ):
         print(filepath)
 
         fast_df, slow_df, interval = load_data(filepath)

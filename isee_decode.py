@@ -98,7 +98,7 @@ async def main(mac_addr: str):
         await client.write_gatt_char(CHARACTERISTIC_UUID_CTRL, DATA_INIT1)
 
         # Wait while data flows
-        await asyncio.sleep(7.0)
+        await asyncio.sleep(3000)
         
         # End
         await client.stop_notify(CHARACTERISTIC_UUID_CTRL)
@@ -112,4 +112,6 @@ if __name__ == "__main__":
         ADDRESS = sys.argv[1]
     else:
         ADDRESS =  "D2:60:7D:C0:B9:95"
+    now = time.time()
     asyncio.run(main(ADDRESS))
+    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", time.time() - now)
