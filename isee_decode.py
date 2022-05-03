@@ -98,7 +98,7 @@ async def main(mac_addr: str):
         await client.write_gatt_char(CHARACTERISTIC_UUID_CTRL, DATA_INIT1)
 
         # Wait while data flows
-        await asyncio.sleep(3000)
+        await asyncio.sleep(120)
         
         # End
         await client.stop_notify(CHARACTERISTIC_UUID_CTRL)

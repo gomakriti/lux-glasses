@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.linalg import expm, norm
 from scipy.integrate import cumtrapz
 import matplotlib.animation as ani
-from utils import preprocessing, CS_interpolation, compute_cycles, get_cycles
+from utils import preprocessing, CS_interpolation, compute_template, get_cycles
 from utils import get_accelerations_directions, normalize_length
 from utils import count_steps
 
@@ -49,7 +49,7 @@ for i in range(7, 8):
     accelerations_norm = np.linalg.norm(accelerations, axis=1)
     angles_accelerations_norm = np.linalg.norm(angles_accelerations, axis=1)
 
-    template = compute_cycles(accelerations_norm)
+    template = compute_template(accelerations_norm)
     cycles = count_steps(accelerations_norm, template)
 
     # plt.plot(np.arange(len(accelerations))/200, accelerations_norm)

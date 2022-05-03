@@ -95,7 +95,7 @@ async def main(mac_addr: str):
         time_interval = time.time() - first_timestamp
 
         # Wait while data flows
-        await asyncio.sleep(600) # - second_timestamp + first_timestamp)
+        await asyncio.sleep(120) # - second_timestamp + first_timestamp)
         
         # End
         await client.stop_notify(CHARACTERISTIC_UUID_CTRL)
