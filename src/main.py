@@ -11,7 +11,7 @@ from utils import count_steps
 labels = (18, 22, 14, 26, 9, 9, 28)
 for i in range(7, 8):
     print(f"Actual number of steps: {labels[i - 1]}")
-    df = pd.read_csv(f"df_dataset/fast/sample{i}_fast.csv", index_col=False)
+    df = pd.read_csv(f"../dataset/fast/sample{i}_fast.csv", index_col=False)
     df = df[[
         "accx",
         "accy",

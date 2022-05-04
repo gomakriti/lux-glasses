@@ -5,7 +5,7 @@ import os
 plot = True
 save = True
 
-directory = 'df_dataset'
+directory = '../dataset'
 
 for filename in os.listdir(directory):
     filepath = os.path.join(directory, filename)

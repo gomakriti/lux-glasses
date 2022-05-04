@@ -12,8 +12,8 @@ import pickle
 from scipy.interpolate import CubicSpline
 
 in_file = "test2"
-df = pd.read_csv(f"df_dataset/fast/{in_file}_fast.csv", index_col=False)
-df_slow = pd.read_csv(f"df_dataset/slow/{in_file}_slow.csv", index_col=False)
+df = pd.read_csv(f"../dataset/fast/{in_file}_fast.csv", index_col=False)
+df_slow = pd.read_csv(f"../dataset/slow/{in_file}_slow.csv", index_col=False)
 df = df[[
     "accx",
     "accy",
@@ -41,7 +41,7 @@ angles_accelerations = df[[
     "gyrz",
 ]].to_numpy()
 
-out_filename = "df_dataset/test.pickle"
+out_filename = "../dataset/test.pickle"
 
 
 accelerations_norm = np.linalg.norm(accelerations, axis=1)

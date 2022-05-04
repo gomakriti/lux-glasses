@@ -4,13 +4,13 @@ from utils import preprocessing, CS_interpolation, compute_template, get_cycles
 from utils import get_accelerations_directions, normalize_length
 from utils import count_steps
 
-with open("df_dataset/raw_stairs.pickle", "rb") as f_stairs:
+with open("../dataset/raw_stairs.pickle", "rb") as f_stairs:
     stairs = pickle.load(f_stairs)
 
-with open("df_dataset/raw_walk.pickle", "rb") as f_walk:
+with open("../dataset/raw_walk.pickle", "rb") as f_walk:
     walk = pickle.load(f_walk)
 
-with open("df_dataset/test.pickle", "rb") as f_test:
+with open("../dataset/test.pickle", "rb") as f_test:
     test = pickle.load(f_test)
 
 def process_class(accelerometer, gyroscope, pressures, template_initialization=None):
@@ -142,5 +142,5 @@ data_dict = {
     "test": samples_test,
 }
 
-with open("df_dataset/data.pickle", "wb") as f:
+with open("../dataset/data.pickle", "wb") as f:
     pickle.dump(data_dict, f)
