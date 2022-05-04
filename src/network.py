@@ -19,8 +19,7 @@ np.random.seed(seed)
  
 def normalize_input(x):
     m = np.mean(x, axis=1, keepdims=True)
-    M = np.max(x, axis=1, keepdims=True)
-    X = (x - m)#/(M-m)
+    X = x - m
     return X
 
 class GlassesNet(Module):
@@ -64,7 +63,7 @@ class SimpleDataset(Dataset):
         return self.x[ind], self.y[ind]
          
 
-with open("data.pickle", "rb") as f:
+with open("../dataset/data.pickle", "rb") as f:
     data = pickle.load(f)
 
 
