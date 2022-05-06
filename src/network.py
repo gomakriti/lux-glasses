@@ -32,7 +32,7 @@ class GlassesNet(Module):
         self.dropout2 = Dropout(0)
         self.dropout3 = Dropout(0)
         self.dropout4 = Dropout(0.25)
-        self.layer1 = Conv1d(6, 8, 7, 3)
+        self.layer1 = Conv1d(7, 8, 7, 3)
         self.layer2 = Conv1d(8, 16, 5, 2)
         self.layer3 = Conv1d(16, 16, 3, 2)
         self.layer4 = Conv1d(16, 16, 3, 2)
@@ -79,7 +79,7 @@ y = np.concatenate([
     np.ones((len(data["up"]), 1)),
     np.ones((len(data["down"]), 1)) * 2
 ], axis=0).astype(np.int64)
-X_train, X_test, y_train, y_test = train_test_split(X[:, :, 0:6], y, test_size=0.1, shuffle=True, stratify=y, random_state=seed)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, shuffle=True, stratify=y, random_state=seed)
 y_train = y_train[:, 0]
 y_test = y_test[:, 0]
 
@@ -137,7 +137,7 @@ plt.show()
 
 test = data["test"]
 for walk in test:
-    walk = normalize_input(walk)[:, :, 0:6]
+    walk = normalize_input(walk)
     walk = torch.tensor(walk).float().permute(0, 2, 1)
     colors = ["red", "green", "blue"]
     c_test = []
