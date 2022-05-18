@@ -13,6 +13,7 @@ print = functools.partial(print, flush=True)
 
 from bleak import BleakClient
 from bleak import BleakScanner
+import argparse
 
 # ISEE BLE CHARAC
 CHARACTERISTIC_UUID_CTRL = "656eeee2-5cc3-4855-929c-6cda2244296e"
@@ -55,7 +56,7 @@ def decode_data():
     raw_data = ""
   
 
-async def main(mac_addr: str):
+async def main(mac_addr: str, duration_seconds: int):
     
     async with BleakClient(mac_addr) as client:
     
@@ -95,7 +96,7 @@ async def main(mac_addr: str):
         time_interval = time.time() - first_timestamp
 
         # Wait while data flows
-        await asyncio.sleep(120) # - second_timestamp + first_timestamp)
+        await asyncio.sleep(duration_seconds) # - second_timestamp + first_timestamp)
         
         # End
         await client.stop_notify(CHARACTERISTIC_UUID_CTRL)
@@ -103,14 +104,16 @@ async def main(mac_addr: str):
 
 if __name__ == "__main__":
     global first_timestamp
+    parser = argparse.ArgumentParser(description="Acquire bluetooth data from luxottica glasses")
+    parser.add_argument("--mac", type=str, help="MAC address of the device", default="D2:60:7D:C0:B9:95")
+    parser.add_argument("--duration", type=int, help="duration in seconds of the acquisition")
+    FLAGS = parser.parse_args()
     first_timestamp = time.time()
         
-    if len(sys.argv) == 2:
-        ADDRESS = sys.argv[1]
-    else:
-        ADDRESS = "D2:60:7D:C0:B9:95" 
+    ADDRESS = FLAGS.mac
+    duration_seconds = FLAGS.duration
     now = time.time()
-    asyncio.run(main(ADDRESS))
+    asyncio.run(main(ADDRESS, duration_seconds))
     import os
     duration = 2
     freq = 440
