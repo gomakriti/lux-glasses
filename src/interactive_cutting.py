@@ -10,8 +10,15 @@ from utils import get_accelerations_directions, normalize_length
 from utils import count_steps
 import pickle
 from scipy.interpolate import CubicSpline
+import argparse
 
-in_file = "test2"
+parser = argparse.ArgumentParser(description="script used to cut a signal and to save it in a file in pickle format")
+parser.add_argument("-i", type=str, help="name of the input file without extension e.g. -i test_in")
+parser.add_argument("-o", type=str, help="name of the output file without extension e.g. -o test_out")
+FLAGS = parser.parse_args()
+in_file = FLAGS.i
+out_file = FLAGS.o
+
 df = pd.read_csv(f"../dataset/fast/{in_file}_fast.csv", index_col=False)
 df_slow = pd.read_csv(f"../dataset/slow/{in_file}_slow.csv", index_col=False)
 df = df[[
@@ -41,7 +48,7 @@ angles_accelerations = df[[
     "gyrz",
 ]].to_numpy()
 
-out_filename = "../dataset/test.pickle"
+out_filename = f"../dataset/{out_file}.pickle"
 
 
 accelerations_norm = np.linalg.norm(accelerations, axis=1)
