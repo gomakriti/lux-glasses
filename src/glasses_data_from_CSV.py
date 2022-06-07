@@ -25,13 +25,14 @@ for filename in os.listdir(directory):
                 directory,
                 "fast",
                 filename[:-4] + '_fast.csv'
-            )
+            ))
             slow_df.to_csv(
                 os.path.join(
                     directory
                     "slow",
                     filename[:-4] + '_slow.csv'
                 )
+            )
             with open(os.path.join(
                 directory,
                 "intervals",
