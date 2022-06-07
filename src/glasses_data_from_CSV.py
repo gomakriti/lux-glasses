@@ -28,7 +28,7 @@ for filename in os.listdir(directory):
             ))
             slow_df.to_csv(
                 os.path.join(
-                    directory
+                    directory,
                     "slow",
                     filename[:-4] + '_slow.csv'
                 )
