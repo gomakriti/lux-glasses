@@ -2,12 +2,21 @@ This software can be used to acquire and process data produced by the luxottica 
 To begin the acquisition run from the src folder the following command
 ### Installation
 
-To install the environment from the root folder run
+First of all you need to create some folders that will be used by the scripts
+```bash
+mkdir dataset
+cd dataset
+mkdir fast
+mkdir slow
+mkdir intervals
+```
+
+Then to install the environment from the root folder run
 ```bash
 conda env create -f environment.yml
 ```
 
-In order to get a beep when the data aquisiton begins and ends you need to install this library, in it is not needed or you can't install the library remove the lines of code
+In linux in order to get a beep when the data aquisiton begins and ends you need to install this library, in it is not needed or you can't install the library remove the lines of code
 in isee_decode_sz.py that run the command
 ```bash
 sudo apt install sox
