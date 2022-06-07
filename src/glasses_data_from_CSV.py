@@ -5,7 +5,7 @@ import os
 plot = True
 save = True
 
-directory = os.path.join('..", "dataset')
+directory = os.path.join("..", "dataset")
 
 for filename in os.listdir(directory):
     filepath = os.path.join(directory, filename)
